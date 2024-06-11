@@ -1,0 +1,56 @@
+stages:
+  - static-analysis
+  - build
+  - install_client
+  - react_build
+  - deploy
+
+
+pre-commit-hooks:
+  stage: static-analysis
+  image: python:latest
+  cache:
+    key: "none"
+  before_script:
+    - git config --global safe.directory '*'
+    - python --version
+    - pip install -r requirements-pre-commit.txt
+  script:
+    - pre-commit run --all-files
+
+build-job:
+  stage: build
+  cache:
+    key: "none"
+  script:
+    - echo "Hello WORLD, $GITLAB_USER_LOGIN!"
+
+cache:
+  paths:
+    - node_modules/
+
+install_client_dependencies:
+  stage: install_client
+  image: node:16
+  script:
+    - cd client
+    - npm install
+  artifacts:
+    paths:
+      - node_modules/
+
+build-react-job:
+  stage: react_build
+  image: node:16
+  script:
+    - cd client
+    - npm run build
+  artifacts:
+    paths:
+      - build/
+
+deploy:
+  stage: deploy
+  script:
+    - echo "This job deploys something from the $CI_COMMIT_BRANCH branch !"
+  environment: production
